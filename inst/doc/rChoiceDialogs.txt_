@@ -1,0 +1,103 @@
+%% LyX 1.6.6.1 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{amstext}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+\usepackage{Sweave}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rcommand}[1]{{\texttt{#1}}}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\textit{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\textit{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\lyxaddress}[1]{
+\par {\raggedright #1
+\vspace{1.4em}
+\noindent\par}
+}
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+
+\title{The rChoiceDialogs package: \newline Simple cross-platform dialogs
+for files and folders}
+
+
+\author{Alex Lisovich$^{\text{1}}$, Roger Day$^{\text{1,2}}$}
+
+
+\date{November 13, 2010}
+
+\maketitle
+
+\lyxaddress{$^{\text{1}}$Department of Biomedical Informatics, $^{\text{2}}$Department
+of Biostatistics \newline University of Pittsburgh}
+
+
+\section{Overview}
+
+The rChoiceDialogs package provides a single mechanism for multiple-selection
+choice dialogs with acceptable modal-window behavior. The motivating
+use case was the need for a cross-platform File Open dialog supporting
+multiple selections. On Windows, \Rfunction{utils::choose.files()}
+fills the need, but on OSX and Linux this is unavailable. In addition,
+a \Rfunction{utils::choose.files()} dialog can disappear behind other
+windows.
+
+Another approach is \Rfunction{tcltk::choose.files()}. While the
+tcltk package comes with a standard installation on Mac, its availability
+on Linux depends on an option selected during the R installation.
+Another deficiency of the tcltk solution is that modal dialogs tend
+to disappear under other windows. 
+
+A Java-based solution, using for example the rJava package{[}1{]},
+should work for systems with Java installed, but there are complications
+with the operating system Mac OS X. Apple ships its own Java implementation
+which Apple ships with Mac OS X, causing difficulties for rJava. The
+user can also install a generic Java from SUN but this entails additional
+complications. 
+
+This package attempts to overcome these deficiencies. Wrapper functions
+make the best choice among the three options discussed above, and
+dispatch the appropriate function calls. 
+\begin{enumerate}
+\item rchoose.files(), intended to be a platform-independent which signature
+and data format correspond to choose.files() function from utils package
+for Windows
+\item The Open Folder dialog through the call to rchoose.dir() which signature
+and data format correspond to choose.dir() function from utils package
+for Winfows
+\item Multiple item selection from the list through the call to rselect.list()
+which signature and data format corresponds to the select.list() function. 
+\end{enumerate}
+Both functions are widely used in the set of packages addressing the
+problem of ID mapping related data collection and analysis {[}2{]},
+also developed by our group.
+
+
+\section{Usage}
+
+Currently the package supports the generic multiple-choice widget
+\Rfunction{rselect.list()}, and special-purpose widgets for choosing
+a directory \Rfunction{rchoose.dir()}, and for choosing multiple
+files, \Rfunction{rchoose.files()}. The functions \Rfunction{canUseJava()}
+and \Rfunction{canUseTclTk()} determine suitability of the corresponding
+graphics dispatch mechanism. Java is the first choice when it is suitable.
+
+On OSX, the Java mechanism is bypassed for the reasons discussed above.
+One can install alternative Java SE, but this package does not attempt
+to detect the presence of an alternative. OnWindows one can use \Rfunction{choose.files()}
+, but this package uses \Rfunction{jchoose.files()} for Windows when
+possible.
+
+
+\end{document}

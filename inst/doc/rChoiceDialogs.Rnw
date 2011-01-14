@@ -1,0 +1,166 @@
+%% LyX 1.6.7 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{url}
+\usepackage{amstext}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
+\usepackage{Sweave}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rcommand}[1]{{\texttt{#1}}}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\textit{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\textit{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\lyxaddress}[1]{
+\par {\raggedright #1
+\vspace{1.4em}
+\noindent\par}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+% Meta information - fill between {} and do not remove %
+% \VignetteIndexEntry{Cross-platform dialogs for lists, files and folders. }
+% \VignetteDepends{rJava, utils}
+% \VignetteKeywords{}
+% \VignettePackage{rChoiceDialogs}
+
+\makeatother
+
+\usepackage{babel}
+
+\begin{document}
+
+\title{The rChoiceDialogs package: \newline Cross-platform dialogs for
+lists, files and folders}
+
+
+\author{Alex Lisovich$^{\text{1}}$, Roger Day$^{\text{1,2}}$}
+
+
+\date{January 11, 2011}
+
+\maketitle
+
+\lyxaddress{$^{\text{1}}$Department of Biomedical Informatics, $^{\text{2}}$Department
+of Biostatistics \newline University of Pittsburgh}
+
+
+\section{Overview}
+
+The rChoiceDialogs package provides a single mechanism for multiple-selection
+choice dialogs with acceptable modal-window behavior. 
+
+The motivating use case was the need for a cross-platform File Open
+dialog supporting multiple selections. On Windows, \Rfunction{utils::choose.files()}
+can cause confusion by disappearing behind other windows. In addition,
+on Mac OS X and Linux this is unavailable. Another approach is \Rfunction{tcltk::choose.files()}.
+While the tcltk package comes with a standard installation on Mac
+OS X, its availability on Linux depends on an option selected during
+the R installation. Another deficiency of the tcltk solution is that
+modal dialogs tend to disappear under other windows. The third approach,
+a Java-based solution, using for example the rJava package{[}1{]},
+should work for systems with Java installed, but there are complications
+with the operating system Mac OS X. Apple ships its own Java implementation
+which Apple ships with Mac OS X, causing difficulties for rJava. The
+Mac OS X user can also install a generic Java from SUN, but this entails
+additional complications. 
+
+This package attempts to overcome these deficiencies. Wrapper functions
+make the best choice among the three approaches in the previous paragraph,
+and dispatch the appropriate function calls. They also achieve uniformity
+in the argument lists (signatures).
+
+The package rChoiceDialogs is used in IdMappingRetrieval and IdMappingAnalysis,
+which address problems related to ID mapping, data collection and
+analysis in bioinformatics, also developed by our group.
+
+
+\section{Usage}
+
+Currently the package supports the general-purpose multiple-choice
+widget \Rfunction{rselect.list()}, and two special-purpose widgets:
+\Rfunction{rchoose.dir()} for choosing a directory, and \Rfunction{rchoose.files()}
+for choosing multiple files. Each of these functions utilizes \Rfunction{canUseJava()}
+and \Rfunction{canUseTclTk()} to determine suitability of the corresponding
+graphics dispatch mechanism. (The Java branch is the first choice
+when it is suitable.) 
+\begin{itemize}
+\item For \Rfunction{rselect.list()}, the dispatch proceeds as follows:
+\end{itemize}
+\begin{tabular}{|c|c|}
+\hline 
+ & \Rfunction{rselect.list()}\tabularnewline
+\hline
+\hline 
+JAVA & \Rfunction{rChoiceDialogs::jselect.list()}\tabularnewline
+\hline 
+Windows, or OS X with Aqua graphics & \Rfunction{utils::select.list()}\tabularnewline
+\hline 
+TCL/TK & \Rfunction{tcltk::tk\_select.list()}\tabularnewline
+\hline
+\end{tabular}
+\begin{itemize}
+\item For \Rfunction{rchoose.dir()}, the dispatch proceeds as follows:
+\end{itemize}
+\begin{tabular}{|c|c|}
+\hline 
+ & \Rfunction{rchoose.dir()}\tabularnewline
+\hline
+\hline 
+JAVA & \Rfunction{rChoiceDialogs::jchoose.dir()}\tabularnewline
+\hline 
+TCL/TK & \Rfunction{tcltk::tk\_choose.dir()}\tabularnewline
+\hline
+\end{tabular}
+\begin{itemize}
+\item For \Rfunction{rchoose.files()}, the dispatch proceeds as follows:
+\end{itemize}
+\begin{tabular}{|c|c|}
+\hline 
+ & \Rfunction{rchoose.files()}\tabularnewline
+\hline
+\hline 
+JAVA & \Rfunction{rChoiceDialogs::jchoose.files()}\tabularnewline
+\hline 
+TCL/TK & \Rfunction{rChoiceDialogs::tkchoose.files()}\tabularnewline
+\hline
+\end{tabular}\\
+
+
+On Mac OS X, the Java mechanism is bypassed for the reasons discussed
+above. One can install an alternative Java SE, but this package does
+not attempt to detect the presence of an alternative. 
+
+On Windows one could use the native \Rfunction{choose.files()} coming
+with the R installation, but instead this package's \Rfunction{rchoose.files()}
+dispatches to \Rfunction{jchoose.files()} for Windows when possible,
+for the reasons outlined above. 
+
+Note that, when the tcltk alternatives are needed, then the tcltk
+version must be at level 8.5 (see \url{http://cran.r-project.org/bin/macosx/tools/}).
+
+
+\section{Session information }
+
+This version of rChoiceDialogs has been developed with R 2.11.0 and
+has been tested with R 2.12.0 as well.
+
+R session information:
+
+<<sessionInfo, results=tex>>=
+library(rChoiceDialogs)
+toLatex(sessionInfo())
+@
+\end{document}
