@@ -183,6 +183,146 @@ jchoose.files<-function(default = getwd(), caption = "Select files",
 	return(fnames);
 }
 
+#' Choose a list of files interactively using the command line
+#'
+#' Allows to choose files or directories using the using the command line based interaction
+#' providing the same functionality as GUI counterparts without using any graphical framework.
+#'
+#' @note cmdchoose.files() is called internally by rchoose.files() if neither Java nor TclTk are available
+#' Calling cmdchoose.files() directly forces the package to use command line interaction regardless of system capabilities and therefore may fail.
+#' Use the direct call to cmdchoose.files() only if it seems beneficial to bypass the rchoose.files() decision logic.
+#'
+#' @name cmdchoose.files
+#' @param default Which filename or directory to show initially. Default is current work directory.
+#' @param caption The caption on the file selection dialog
+#' @param multi Whether to allow multiple files to be selected
+#' @param dir.only If TRUE (default is FALSE) works as directory chooser.
+#' @param filters A matrix of filename filters. If NULL, all files are shown.
+#' Default is filters=getDefaultFilters().
+#' @param index Which row of filters to use by default.
+#' @return A character vector giving zero or more file paths. If user cancels operation, character(0) is returned.
+#'
+#' @seealso {\code{\link{getDefaultFilters}}, \code{\link{rchoose.files}}, \code{\link{canUseJavaModal}}}
+#' @examples
+#' \dontrun{
+#' cmdchoose.files();
+#' }
+#' @export cmdchoose.files
+#' @author  Alex Lisovich, Roger Day
+
+cmdchoose.files = function(default = getwd(), caption = "Select files", multi = TRUE, dir.only=FALSE,
+                           filters = getDefaultFilters(), index = nrow(filters))
+{
+  
+  getChoice = function(prompt="",multi=TRUE){
+    cat(prompt);
+    
+    done<-FALSE
+    while(!done){
+      s<-readline(": ");
+      s<-unlist(strsplit(s," ",fixed=TRUE));
+      suppressWarnings(s<-as.integer(s));
+      if(length(s)>0 && sum(is.na(s))==0){
+        if(!multi && length(s)>1){
+          cat(gettext("!!!invalid input: multiple selections (should use multi=TRUE)\n\n"));          
+        } else {
+          done=TRUE;
+        }
+      } else {
+        cat(gettext("!!!invalid input: not a numeric choice\n\n"));
+      }
+    }
+    return(s);  
+  }
+  
+  
+  display.selection = function(path=getwd(),pattern=NULL,dir.only=FALSE){
+    all.items<-dir(path=path,pattern=pattern);
+    all.items.fullnames<-dir(path=path,pattern=pattern,full.names=TRUE);
+    are.dirs<-file.info(all.items.fullnames)$isdir;
+    
+    dirs<-all.items[are.dirs];
+    if(dir.only){
+      files<-dirs;
+    }else{
+      files<-all.items[!are.dirs];
+    }
+    
+    cat("===Look in:",path,"===\n");
+    cat("1:\t../\n");
+    if(length(dirs)>0){
+      cat(paste(c(2:(length(dirs)+1)),":\t./",dirs,"\n",sep=""),sep="");
+    }
+    if(length(files)>0){
+      cat(paste(c(2:(length(files)+1))+length(dirs),":\t",files,"\n",sep=""),sep="");
+    }
+    
+    return(list(ndirs=length(dirs)+1,items=c("../",dirs,files)));
+  } 
+  
+  if(is.matrix(filters)) {
+    pattern = filters[index, 2]
+    ### Convert from e.g. "*.txt;*.csv;*.tsv"  to "*.txt$|*.csv$|*.tsv$"
+    pattern = paste(gsub(';', '$|', pattern), '$', sep="")
+  }
+  else if(is.vector(filters) & length(filters)==2 & mode(filters)=='character') {
+    ### filters = c("CSV files (*.txt,*.csv,*.tsv)","*.txt;*.csv;*.tsv"));
+    pattern = filters[2]
+    ### Convert from e.g. "*.txt;*.csv;*.tsv"  to "*.txt$|*.csv$|*.tsv$"
+    pattern = paste(gsub(';', '$|', pattern), '$', sep="")
+  }
+  else if(is.vector(filters) & length(filters)==1 & mode(filters)=='character') {
+    pattern = filters  ###
+    if(substring(pattern, nchar(pattern)) != '$')
+      pattern = paste(gsub(';', '$|', pattern), '$', sep="")
+  }
+  else {
+    warning("file extension pattern not recognized.")
+    pattern = ".*"
+  }
+  
+  cur.path<-default;
+  prev.path<-"";
+  res<-character(0);
+  done<-FALSE;
+  
+  
+  while(!done){
+    if(cur.path!=prev.path){
+      prev.path<-cur.path;
+      cat("===",caption,"===\n");
+      items<-display.selection(cur.path,pattern,dir.only);
+    }  
+    choices<-getChoice("\nEnter number(s) separated by spaces, or 0 to cancel",multi=multi);
+    if(min(choices)<0 || max(choices)>length(items$items)){
+      cat(gettext("!!!invalid input: selection out of range\n\n"));
+      next;
+    }
+    #browser();
+    numdirs<-sum(choices<=items$ndirs);
+    if(numdirs>0){ #at least one directoriy selected
+      if(sum(choices<=items$ndirs)>1){
+        cat(gettext("!!!invalid input: more than one directory was selected\n\n"));
+      } else if (length(choices)>1){
+        cat(gettext("!!!invalid input: selection contains both directories and files\n\n"));
+      } else if (choices[1]==1){ #go up one level
+        prev.path<-cur.path;
+        cur.path<-unlist(strsplit(cur.path,"/",fixed=TRUE));
+        cur.path<-paste(cur.path[-length(cur.path)],collapse="/");        
+      } else if (choices[1]>0) {#drill down
+        prev.path<-cur.path;
+        cur.path<-paste(cur.path,items$items[choices[1]],sep="/");
+      } else {
+        done=TRUE; #0 was entered
+      }
+    }else{ #files selected
+      return(normalizePath(paste(cur.path,items$items[choices],sep="/")));
+    }
+  }#while
+  return(res);
+}
+
+
 
 #' Choose a directory interactively using rJava
 #'
@@ -265,12 +405,16 @@ rchoose.files<-function(default = getwd(), caption = "Select files",
              multi = TRUE, filters = getDefaultFilters(),
              index = nrow(filters)){
 
-	if(canUseJava())
+  if (!interactive()) 
+    stop("rchoose.files() cannot be used non-interactively")
+  
+	if(canUseJava()){
 		return(jchoose.files(default,caption,multi,filters,index));
-	if(canUseTclTk())
+	} else if(canUseTclTk()) {
 		return(tkchoose.files(default,caption,multi,filters,index));
-
-	warning("rchoose.files: no suitable graphics found");
+	} else {
+	  return(cmdchoose.files(default,caption,multi,FALSE,filters,index));
+	}
 
 	return(character(0));
 }
@@ -297,12 +441,16 @@ rchoose.files<-function(default = getwd(), caption = "Select files",
 
 
 rchoose.dir<-function(default=getwd(), caption="Select Directory"){
-	if(canUseJava())
+  if (!interactive()) 
+    stop("rchoose.files() cannot be used non-interactively")
+  
+  if(canUseJava()){
 		return(jchoose.dir(default,caption));
-	if(canUseTclTk())
+	} else if(canUseTclTk()) {
 		return(tcltk::tk_choose.dir(default,caption));
-
-	warning("rchoose.dir: no suitable graphics found");
+	} else {
+	  return(cmdchoose.files(default,caption,TRUE,TRUE));
+	}
 
 	return(character(0));
 

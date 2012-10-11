@@ -1,11 +1,14 @@
-export(getDefaultFilters)
-export(tkchoose.files)
-export(jchoose.files)
-export(jchoose.dir)
-export(rchoose.files)
-export(rchoose.dir)
-export(jselect.list)
-export(rselect.list)
-export(canUseTclTk)
-export(canUseJava)
-export(canUseJavaModal)
+export(
+  canUseJava,
+  canUseJavaModal,
+  canUseTclTk,
+  cmdchoose.files,
+  getDefaultFilters,
+  jchoose.dir,
+  jchoose.files,
+  jselect.list,
+  rchoose.dir,
+  rchoose.files,
+  rselect.list,
+  tkchoose.files)
+

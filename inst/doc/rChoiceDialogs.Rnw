@@ -1,4 +1,4 @@
-%% LyX 1.6.9 created this file.  For more info, see http://www.lyx.org/.
+%% LyX 2.0.2 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[english]{article}
 \usepackage[T1]{fontenc}
@@ -13,7 +13,13 @@
 \providecommand{\tabularnewline}{\\}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
-\usepackage{noweb}
+%\usepackage{Sweave}
+\ifdefined\Sinput
+\else
+  \RequirePackage[nogin]{Sweave}
+\fi
+\usepackage{tikz}
+\newenvironment{dummy}{\par}{\par}
 \newcommand{\lyxaddress}[1]{
 \par {\raggedright #1
 \vspace{1.4em}
@@ -40,7 +46,6 @@
 \makeatother
 
 \usepackage{babel}
-
 \begin{document}
 
 \title{The rChoiceDialogs package: \newline Cross-platform dialogs for
@@ -50,7 +55,7 @@ lists, files and folders}
 \author{Alex Lisovich$^{\text{1}}$, Roger Day$^{\text{1,2}}$}
 
 
-\date{January 11, 2011}
+\date{October 6, 2012}
 
 \maketitle
 
@@ -96,21 +101,24 @@ widget \Rfunction{rselect.list()}, and two special-purpose widgets:
 for choosing multiple files. Each of these functions utilizes \Rfunction{canUseJava()}
 and \Rfunction{canUseTclTk()} to determine suitability of the corresponding
 graphics dispatch mechanism. (The Java branch is the first choice
-when it is suitable.) 
+when it is suitable.) . When neither available the command line based
+option utilized. 
 \begin{itemize}
 \item For \Rfunction{rselect.list()}, the dispatch proceeds as follows:
 \end{itemize}
 \begin{tabular}{|c|c|}
 \hline 
  & \Rfunction{rselect.list()}\tabularnewline
-\hline
+\hline 
 \hline 
 JAVA & \Rfunction{rChoiceDialogs::jselect.list()}\tabularnewline
 \hline 
 Windows, or OS X with Aqua graphics & \Rfunction{utils::select.list()}\tabularnewline
 \hline 
 TCL/TK & \Rfunction{tcltk::tk\_select.list()}\tabularnewline
-\hline
+\hline 
+none available & \Rfunction{select.list()}\tabularnewline
+\hline 
 \end{tabular}
 \begin{itemize}
 \item For \Rfunction{rchoose.dir()}, the dispatch proceeds as follows:
@@ -118,12 +126,14 @@ TCL/TK & \Rfunction{tcltk::tk\_select.list()}\tabularnewline
 \begin{tabular}{|c|c|}
 \hline 
  & \Rfunction{rchoose.dir()}\tabularnewline
-\hline
+\hline 
 \hline 
 JAVA & \Rfunction{rChoiceDialogs::jchoose.dir()}\tabularnewline
 \hline 
 TCL/TK & \Rfunction{tcltk::tk\_choose.dir()}\tabularnewline
-\hline
+\hline 
+none available & \Rfunction{rChoiceDialogs::cmdchoose.files(...,dir.only=TRUE)}\tabularnewline
+\hline 
 \end{tabular}
 \begin{itemize}
 \item For \Rfunction{rchoose.files()}, the dispatch proceeds as follows:
@@ -131,12 +141,14 @@ TCL/TK & \Rfunction{tcltk::tk\_choose.dir()}\tabularnewline
 \begin{tabular}{|c|c|}
 \hline 
  & \Rfunction{rchoose.files()}\tabularnewline
-\hline
+\hline 
 \hline 
 JAVA & \Rfunction{rChoiceDialogs::jchoose.files()}\tabularnewline
 \hline 
 TCL/TK & \Rfunction{rChoiceDialogs::tkchoose.files()}\tabularnewline
-\hline
+\hline 
+none available & \Rfunction{rChoiceDialogs::cmdchoose.files()}\tabularnewline
+\hline 
 \end{tabular}\\
 
 
@@ -156,12 +168,18 @@ version must be at level 8.5 (see \url{http://cran.r-project.org/bin/macosx/tool
 \section{Session information }
 
 This version of rChoiceDialogs has been developed with R 2.11.0 and
-has been tested with R 2.12.0 as well.
+has been tested with up to R 2.15.0.
 
 R session information:
-
+\begin{dummy}
 <<sessionInfo, results=tex>>=
+
 library(rChoiceDialogs)
+
 toLatex(sessionInfo())
+
 @
+
+\end{dummy}
+
 \end{document}
