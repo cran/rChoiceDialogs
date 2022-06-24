@@ -14,3 +14,4 @@ export(
   rselect.list,
   tkchoose.files)
 
+importFrom("utils", "packageDescription", "select.list")
